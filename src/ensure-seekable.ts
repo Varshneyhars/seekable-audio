@@ -5,11 +5,14 @@
  *   .mp3  — write the Info/Xing frame (frame count + seek TOC) when it is
  *           missing, dropping ID3 tags/artwork (mp3-seekable.ts);
  *   .wav  — rewrite header sizes a streaming writer left wrong; transcode a
- *           non-16-bit-PCM stream to 16-bit PCM (wav-seekable.ts).
+ *           non-16-bit-PCM stream to 16-bit PCM (wav-seekable.ts);
+ *   .m4a/.m4b/.mp4/.aac — move `moov` in front of the media and rewrite the
+ *           chunk offsets it carries (mp4-faststart.ts).
  * Every import path and the admin upload routes run the buffer through here
  * before it goes to S3, so what is served is always the fixed version.
  */
 import { ensureMp3Seekable, mp3HasSeekInfo } from "./mp3-seekable.js";
+import { ensureMp4Faststart, mp4FaststartFromHead } from "./mp4-faststart.js";
 import { ensureWavSeekable, wavHeaderIsSound } from "./wav-seekable.js";
 
 export type SeekableStatus = "fixed" | "already-ok" | "skipped" | "failed";
@@ -35,6 +38,12 @@ export function ensureAudioSeekable(
       return ensureMp3Seekable(buffer);
     case "wav":
       return ensureWavSeekable(buffer);
+    // The MP4 family shares one container and one fault: `moov` written last.
+    case "m4a":
+    case "m4b":
+    case "mp4":
+    case "aac":
+      return ensureMp4Faststart(buffer);
     default:
       return { buffer, status: "skipped", detail: `no handler for .${ext}` };
   }
@@ -60,6 +69,11 @@ export function hasSeekIndex(head: Buffer, fileName: string, totalBytes?: number
       return mp3HasSeekInfo(head);
     case "wav":
       return totalBytes === undefined ? null : wavHeaderIsSound(head, totalBytes);
+    case "m4a":
+    case "m4b":
+    case "mp4":
+    case "aac":
+      return mp4FaststartFromHead(head);
     default:
       return true;
   }

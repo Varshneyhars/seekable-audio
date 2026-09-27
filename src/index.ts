@@ -13,6 +13,13 @@ export type { WavLayout } from "./wav-seekable.js";
 
 export { ensureMp3Seekable, mp3HasSeekInfo, readMp3Layout } from "./mp3-seekable.js";
 
+export {
+  ensureMp4Faststart,
+  mp4IsFaststart,
+  mp4FaststartFromHead,
+  readMp4Boxes,
+} from "./mp4-faststart.js";
+
 export { flacAudioMd5, FLAC_FINGERPRINT_BYTES } from "./flac-fingerprint.js";
 
 export { audioDurationFromHeader, flacDuration, wavDuration } from "./duration.js";

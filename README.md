@@ -21,8 +21,11 @@ reasons are format-specific and invisible until someone drags a playhead:
   size fields. Browsers tolerate it; strict decoders reject the file outright.
 - **MP3** without an Info/Xing frame has no frame count and no seek table, so a
   VBR stream seeks to the wrong place.
+- **MP4 / M4A** written by a muxer that did not know the duration up front puts
+  the index (`moov`) *after* the media, so a player cannot start — let alone
+  seek — until it has the tail. Over HTTP that means downloading the whole file.
 
-Each is a small, well-specified fix. This does all three behind one call.
+Each is a small, well-specified fix. This does all four behind one call.
 
 ## Usage
 
@@ -35,7 +38,20 @@ const res = ensureAudioSeekable(buffer, "clip.flac");
 // res.detail: what was wrong, when something was
 ```
 
-Dispatch is by file extension, so pass the name you have.
+Dispatch is by file extension, so pass the name you have: `.flac`, `.wav`,
+`.mp3`, `.m4a`, `.m4b`, `.mp4`, `.aac`. Anything else comes back `skipped` with
+the original buffer — never altered, never thrown on.
+
+### MP4 / M4A faststart
+
+`moov` moves in front of the media and the absolute chunk offsets it carries
+(`stco`, or `co64` past 4 GiB) are rewritten to match. That rewrite is the whole
+difficulty: move `moov` and leave the offsets alone and the file still loads,
+still reports the right duration, and plays whatever now sits at the old
+positions. Verified by decoding a real ffmpeg-written `.m4a` before and after —
+the PCM comes out byte-identical.
+
+Pure JavaScript, no re-encode, file size unchanged.
 
 ### Identify a FLAC from 42 bytes
 
@@ -86,6 +102,8 @@ rather than repair:
 | WAV that is not 16-bit PCM | transcoded to 16-bit PCM, keeping rate and channels |
 | MP3 missing its Info/Xing frame | remuxed, audio frames copied untouched, ID3 and artwork dropped |
 
+FLAC, MP4/M4A, and the common 16-bit-PCM WAV repair need nothing installed.
+
 They call `ffmpeg` on `PATH`, or `FFMPEG_PATH` if set, and return
 `status: "failed"` with a reason when it is missing. A **16-bit PCM WAV with
 wrong header sizes is repaired in pure JS** — the sizes are rewritten and the
@@ -100,11 +118,22 @@ audio bytes are never touched, which is the common streaming case.
 | `hasSeekIndex(head, fileName, totalBytes?)` | is a fix needed, from a head |
 | `wavHeaderIsSound(head, totalBytes)` / `mp3HasSeekInfo(head)` | per format |
 | `readWavLayout(buffer)` / `readMp3Layout(buffer)` | parsed structure |
+| `ensureMp4Faststart(buffer)` | move `moov` to the front, rewriting chunk offsets |
+| `mp4IsFaststart(buffer)` / `mp4FaststartFromHead(head)` | already seekable? |
+| `readMp4Boxes(buffer)` | top-level boxes, in file order |
 | `flacAudioMd5(head)` / `FLAC_FINGERPRINT_BYTES` | the 42-byte fingerprint |
 | `audioDurationFromHeader` / `flacDuration` / `wavDuration` | seconds, or null |
 
 `null` means "not this format, or cannot tell" everywhere — never a thrown error
 and never a wrong answer.
+
+## Not covered
+
+**Ogg / Opus** and **WebM / Matroska** are not handled, and are `skipped` rather
+than half-fixed. They are different problems, not more of the same one: Ogg
+pages carry granule positions and seek by bisection without an index at all,
+while WebM needs a `Cues` element and a `SeekHead` written and cross-referenced.
+Neither is a byte move, so neither belongs here until it is done properly.
 
 ## Provenance
 
