@@ -1,21 +1,50 @@
 {
   "name": "seekable-audio",
   "version": "0.1.0",
-  "description": "Make FLAC, WAV and MP3 buffers seekable in a browser — inject a FLAC SEEKTABLE, repair WAV headers a streaming writer left wrong — and fingerprint a FLAC from its first 42 bytes.",
+  "description": "Make FLAC, WAV and MP3 buffers seekable in a browser \u2014 inject a FLAC SEEKTABLE, repair WAV headers a streaming writer left wrong \u2014 and fingerprint a FLAC from its first 42 bytes.",
   "keywords": [
-    "flac", "seektable", "wav", "riff", "mp3", "xing",
-    "seekable", "audio", "streaming", "header", "repair",
-    "fingerprint", "md5", "streaminfo"
+    "flac",
+    "seektable",
+    "wav",
+    "riff",
+    "mp3",
+    "xing",
+    "seekable",
+    "audio",
+    "streaming",
+    "header",
+    "repair",
+    "fingerprint",
+    "md5",
+    "streaminfo"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Varshneyhars/seekable-audio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Varshneyhars/seekable-audio/issues"
+  },
+  "homepage": "https://github.com/Varshneyhars/seekable-audio#readme",
+  "author": "Harshit Varshney",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
-  "files": ["dist", "README.md", "LICENSE"],
-  "engines": { "node": ">=18" },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "tsx --test test/*.test.ts",
