@@ -135,6 +135,15 @@ pages carry granule positions and seek by bisection without an index at all,
 while WebM needs a `Cues` element and a `SeekHead` written and cross-referenced.
 Neither is a byte move, so neither belongs here until it is done properly.
 
+## Credits
+
+The seek-fixing logic here — what is actually wrong with each format, and what
+a correct repair looks like — is **[Abhishek Shrivastava](https://github.com/Abhxhek)**'s
+work. He wrote it, and the rest of it exists around that.
+
+This package is that code lifted out of the platform it was written for, with
+the edges tidied and tests around the parts that are easy to get wrong.
+
 ## Provenance
 
 Extracted from a speech-annotation platform where it runs on every imported
